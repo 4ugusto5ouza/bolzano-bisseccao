@@ -15,8 +15,19 @@ type FormType = {
   funcpolinomial: string;
 };
 
+type DataSourceType = {
+  key: number;
+  func: string;
+  xValue: number;
+  fxValue: number;
+  sinal: "+" | "-";
+};
+
 type AppState = {
   funcpolinomial: string;
+  xValueInitial: number;
+  dataSource: DataSourceType[];
+  loading: boolean;
 };
 
 function isSignal(term: string): boolean {
@@ -28,41 +39,49 @@ function App() {
   const [form] = Form.useForm<FormType>();
   const [state, setState] = useState<AppState>({
     funcpolinomial: "",
+    xValueInitial: 50,
+    dataSource: [],
+    loading: false,
   });
 
+  console.log("Renderizou");
+
+  const dataSourceAux: DataSourceType[] = [];
+
   const handleCalcular = () => {
-    debugger;
     let value = form.getFieldValue("funcpolinomial");
-
     value = value.replaceAll(" ", "");
-    setState((prev) => ({ ...prev, funcpolinomial: value }));
-    value = value.replaceAll("x", "3");
-    const result = Algebrite.run(value);
-    console.log(result);
+    setState((prev) => ({ ...prev, funcpolinomial: value, loading: true }));
+    value = value.replaceAll("x", "(x)");
 
-    // while (value.includes("^")) {
-    //   let posicaoPow = value.indexOf("^");
-    //   let antPow = posicaoPow - 1;
-    //   if (isSignal(value[posicaoPow + 1])) {
-    //     posicaoPow = posicaoPow + 1;
-    //   }
-    //   let posPow = posicaoPow + 1;
-    //   while (antPow > 0 && !isNaN(value[antPow - 1])) {
-    //     antPow = antPow - 1;
-    //   }
-    //   while (!isNaN(value[posPow])) {
-    //     posPow = posPow + 1;
-    //   }
-    //   const potencia = value.slice(antPow, posPow);
-    //   const numbersPot = potencia.split("^");
-    //   const resultadoPot = Math.pow(numbersPot[0], numbersPot[1]);
-    //   value = value.replace(potencia, resultadoPot);
+    for (
+      let index = state.xValueInitial * -1;
+      index <= state.xValueInitial;
+      index++
+    ) {
+      const func = value.replaceAll("x", `${index}`);
+      const fx = Algebrite.run(func);
+      const data: DataSourceType = {
+        key: index,
+        func,
+        xValue: index,
+        fxValue: fx,
+        sinal: fx >= 0 ? "+" : "-",
+      };
+      dataSourceAux.push(data);
+    }
 
-    //   console.log(value);
-    // }
+    setTimeout(() => {
+      setState((prev) => ({
+        ...prev,
+        dataSource: dataSourceAux,
+        loading: false,
+      }));
+    }, 3000);
   };
   const handleLimpar = () => {
     form.resetFields();
+    setState((prev) => ({ ...prev, funcpolinomial: "", dataSource: [] }));
   };
   const handleExemplo = () => {
     form.setFieldsValue({ funcpolinomial: "x^3 - 9*x + 3" });
@@ -123,21 +142,23 @@ function App() {
         )}
         <Divider />
         <Table
+          size="small"
+          loading={state.loading}
           columns={[
+            {
+              title: "x",
+              dataIndex: "xValue",
+              key: "xValue",
+            },
             {
               title: "Função",
               dataIndex: "func",
               key: "func",
             },
             {
-              title: "x",
-              dataIndex: "x",
-              key: "x",
-            },
-            {
               title: "f(x)",
-              dataIndex: "f(x)",
-              key: "f(x)",
+              dataIndex: "fxValue",
+              key: "fxValue",
             },
             {
               title: "Sinal",
@@ -145,6 +166,7 @@ function App() {
               key: "sinal",
             },
           ]}
+          dataSource={state.dataSource}
         />
       </Card>
     </Card>
