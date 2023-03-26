@@ -1,5 +1,5 @@
 import "./App.css";
-import { Button, Card, Divider, Form, Input, Table } from "antd";
+import { Button, Card, Divider, Form, Input, Table, message } from "antd";
 import Algebrite from "algebrite";
 import { useState } from "react";
 
@@ -16,7 +16,6 @@ type FormType = {
 };
 
 type DataSourceType = {
-  key: number;
   func: string;
   xValue: number;
   fxValue: number;
@@ -30,13 +29,9 @@ type AppState = {
   loading: boolean;
 };
 
-function isSignal(term: string): boolean {
-  debugger;
-  return term === "+" || term === "-";
-}
-
 function App() {
   const [form] = Form.useForm<FormType>();
+  const [messageApi, contextHolder] = message.useMessage();
   const [state, setState] = useState<AppState>({
     funcpolinomial: "",
     xValueInitial: 50,
@@ -44,10 +39,7 @@ function App() {
     loading: false,
   });
 
-  console.log("Renderizou");
-
   const dataSourceAux: DataSourceType[] = [];
-
   const handleCalcular = () => {
     let value = form.getFieldValue("funcpolinomial");
     value = value.replaceAll(" ", "");
@@ -61,8 +53,20 @@ function App() {
     ) {
       const func = value.replaceAll("x", `${index}`);
       const fx = Algebrite.run(func);
+
+      if (isNaN(fx)) {
+        messageApi.open({
+          type: "error",
+          content: "Há um erro de sintaxe na função informada!",
+          duration: 3,
+          style: {
+            marginTop: "5vh",
+          },
+        });
+        break;
+      }
+
       const data: DataSourceType = {
-        key: index,
         func,
         xValue: index,
         fxValue: fx,
@@ -88,13 +92,15 @@ function App() {
   };
 
   return (
-    <Card style={{ width: "800px" }}>
+    <Card style={{ width: "800px", height: "100%" }}>
       <h1>{"Teorema de Bolzano"}</h1>
+      {contextHolder}
       <Form
         {...layout}
         form={form}
         labelCol={{ span: 8 }}
         style={{ maxWidth: 600 }}
+        onFinish={handleCalcular}
       >
         <Form.Item
           label="f(x)"
@@ -102,18 +108,18 @@ function App() {
           rules={[
             {
               required: true,
-              message:
-                "Para realização da operação é necessário informar uma função polinomial!",
+              message: "Necessário informar uma função polinomial!",
             },
           ]}
         >
-          <Input />
+          <Input placeholder="x^3 - 9*x + 3" />
         </Form.Item>
         <Form.Item {...tailLayout}>
           <Button
             style={{ margin: "5px" }}
             type="primary"
-            onClick={handleCalcular}
+            htmlType="submit"
+            loading={state.loading}
           >
             {"Calcular"}
           </Button>
@@ -167,6 +173,14 @@ function App() {
             },
           ]}
           dataSource={state.dataSource}
+          rowKey={(record) => record.xValue}
+          pagination={{
+            size: "small",
+            position: ["bottomCenter"],
+          }}
+          style={{
+            height: "450px",
+          }}
         />
       </Card>
     </Card>
