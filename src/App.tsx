@@ -39,13 +39,21 @@ type Interval = {
   label: string;
 };
 
+type IteracaoK = {
+  label: string;
+  k: Interval;
+};
+
 type AppState = {
   funcpolinomial: string;
   xValueInitial: number;
   dataSource: DataSourceType[];
   intervals: Interval[];
   selectedInterval: Interval | undefined;
-  loading: boolean;
+  iteracaoK: IteracaoK | undefined;
+  epsilon: number | undefined;
+  loadingGeneretInterval: boolean;
+  loadingEpsilon: boolean;
 };
 
 function App() {
@@ -57,17 +65,25 @@ function App() {
     xValueInitial: 1000,
     dataSource: [],
     intervals: [],
+    iteracaoK: undefined,
     selectedInterval: undefined,
-    loading: false,
+    epsilon: undefined,
+    loadingGeneretInterval: false,
+    loadingEpsilon: false,
   });
 
   const dataSourceAux: DataSourceType[] = [];
   const intervalsAux: Interval[] = [];
+  const kAux: IteracaoK[] = [];
 
   const handleClickGerarIntervalos = () => {
     let value = form.getFieldValue("funcpolinomial");
     value = value.replaceAll(" ", "");
-    setState((prev) => ({ ...prev, funcpolinomial: value, loading: true }));
+    setState((prev) => ({
+      ...prev,
+      funcpolinomial: value,
+      loadingGeneretInterval: true,
+    }));
     value = value.replaceAll("x", "(x)");
 
     for (
@@ -119,11 +135,12 @@ function App() {
         ...prev,
         dataSource: dataSourceAux,
         intervals: intervalsAux,
-        loading: false,
+        loadingGeneretInterval: false,
       }));
     }, 3000);
   };
-  const handleLimpar = () => {
+
+  const handleClickLimpar = () => {
     form.resetFields();
     formInterval.resetFields();
     setState({
@@ -131,12 +148,119 @@ function App() {
       xValueInitial: 1000,
       dataSource: [],
       intervals: [],
+      iteracaoK: undefined,
       selectedInterval: undefined,
-      loading: false,
+      epsilon: undefined,
+      loadingGeneretInterval: false,
+      loadingEpsilon: false,
     });
   };
-  const handleExemplo = () => {
+
+  const handleClickExemplo = () => {
     form.setFieldsValue({ funcpolinomial: "x^3 - 9*x + 3" });
+  };
+
+  const handleClickCalcularEpsilon = () => {
+    let value = formInterval.getFieldValue("epsilon");
+
+    if (isNaN(value)) {
+      messageApi.open({
+        type: "error",
+        content: "Insira um valor válido para critério de parada!",
+        duration: 3,
+        style: {
+          marginTop: "5vh",
+        },
+      });
+    }
+    if (value == 0) {
+      messageApi.open({
+        type: "error",
+        content:
+          "O valor para o critério de parada deve ser diferente de zero!",
+        duration: 3,
+        style: {
+          marginTop: "5vh",
+        },
+      });
+    }
+    setState((prev) => ({
+      ...prev,
+      epsilon: value,
+      loadingEpsilon: true,
+    }));
+
+    const { selectedInterval, funcpolinomial } = state;
+    let fxAux = 1000;
+    let count = 1;
+    const a = selectedInterval?.a as DataSourceType;
+    const b = selectedInterval?.b as DataSourceType;
+    let aValue = a.xValue;
+    let bValue = b.xValue;
+    let aFxValue = a.fxValue;
+    let bFxValue = b.fxValue;
+    let aFunc = a.func;
+    let bFunc = b.func;
+
+    while (Math.abs(fxAux) >= value) {
+      debugger;
+      const kValue = Number(((aValue + bValue) / 2).toFixed(value.length));
+
+      let func = funcpolinomial.replaceAll("x", "(x)");
+      func = func.replaceAll("x", `${kValue}`);
+      fxAux = Number(
+        Number(Algebrite.run(func).replace("...", "")).toFixed(value.length)
+      );
+      console.log(fxAux);
+
+      const replaceA = fxAux > 0 === aFxValue > 0;
+      if (replaceA) {
+        aValue = kValue;
+        aFxValue = fxAux;
+        aFunc = func;
+      } else {
+        bValue = kValue;
+        bFxValue = fxAux;
+        bFunc = func;
+      }
+
+      kAux.push({
+        label: `k${count}`,
+        k: replaceA
+          ? {
+              a: {
+                func,
+                fxValue: fxAux,
+                xValue: kValue,
+                sinal: fxAux >= 0 ? "+" : "-",
+              },
+              b: {
+                func: bFunc,
+                fxValue: bFxValue,
+                xValue: bValue,
+                sinal: bFxValue >= 0 ? "+" : "-",
+              },
+              label: "",
+            }
+          : {
+              a: {
+                func: aFunc,
+                fxValue: aFxValue,
+                xValue: aValue,
+                sinal: aFxValue >= 0 ? "+" : "-",
+              },
+              b: {
+                func,
+                fxValue: fxAux,
+                xValue: kValue,
+                sinal: fxAux >= 0 ? "+" : "-",
+              },
+              label: "",
+            },
+      });
+      count++;
+    }
+    console.log(kAux);
   };
 
   return (
@@ -163,13 +287,17 @@ function App() {
         </Form.Item>
         <Form.Item {...tailLayout}>
           <Space wrap>
-            <Button type="primary" htmlType="submit" loading={state.loading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={state.loadingGeneretInterval}
+            >
               {"Gerar intervalos"}
             </Button>
-            <Button htmlType="button" onClick={handleLimpar}>
+            <Button htmlType="button" onClick={handleClickLimpar}>
               {"Limpar"}
             </Button>
-            <Button type="link" htmlType="button" onClick={handleExemplo}>
+            <Button type="link" htmlType="button" onClick={handleClickExemplo}>
               {"Exemplo"}
             </Button>{" "}
           </Space>
@@ -179,11 +307,11 @@ function App() {
         {...layout}
         form={formInterval}
         style={{ maxWidth: 600 }}
-        onFinish={handleClickGerarIntervalos}
+        onFinish={handleClickCalcularEpsilon}
       >
         <Form.Item
           labelCol={{ span: 15 }}
-          wrapperCol={{ span:4 }}
+          wrapperCol={{ span: 4 }}
           label="Selecione o intervalo:"
           name="intervalselected"
           style={{ display: "inline-block", width: "calc(65% - 8px)" }}
@@ -226,12 +354,14 @@ function App() {
             },
           ]}
         >
-          <Input />
+          <Input disabled={!(state.intervals.length > 0)} />
         </Form.Item>
-        <Form.Item
-        wrapperCol={{ offset: 8, span: 7 }}
-        >
-          <Button type="primary" htmlType="submit" loading={state.loading}>
+        <Form.Item wrapperCol={{ offset: 8, span: 7 }}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={state.loadingEpsilon}
+          >
             {"Calcular"}
           </Button>
         </Form.Item>
@@ -248,7 +378,7 @@ function App() {
               children: (
                 <Table
                   size="small"
-                  loading={state.loading}
+                  loading={state.loadingGeneretInterval}
                   columns={[
                     {
                       title: "x",
