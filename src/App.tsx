@@ -203,7 +203,6 @@ function App() {
     let bFunc = b.func;
 
     while (Math.abs(fxAux) >= value) {
-      debugger;
       const kValue = Number(((aValue + bValue) / 2).toFixed(value.length));
 
       let func = funcpolinomial.replaceAll("x", "(x)");
