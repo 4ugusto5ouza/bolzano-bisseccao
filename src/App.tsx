@@ -125,6 +125,7 @@ function App() {
   };
   const handleLimpar = () => {
     form.resetFields();
+    formInterval.resetFields();
     setState({
       funcpolinomial: "",
       xValueInitial: 1000,
