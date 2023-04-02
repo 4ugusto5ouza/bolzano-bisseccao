@@ -11,7 +11,6 @@ import {
   Select,
   Space,
 } from "antd";
-import Algebrite from "algebrite";
 import { useState } from "react";
 
 const layout = {
@@ -27,6 +26,7 @@ type FormType = {
 };
 
 type DataSourceType = {
+  key: number;
   func: string;
   xValue: number;
   fxValue: number;
@@ -34,12 +34,14 @@ type DataSourceType = {
 };
 
 type Interval = {
+  key: number;
   a: DataSourceType;
   b: DataSourceType;
   label: string;
 };
 
 type IteracaoK = {
+  key: number;
   label: string;
   k: Interval;
 };
@@ -50,7 +52,7 @@ type AppState = {
   dataSource: DataSourceType[];
   intervals: Interval[];
   selectedInterval: Interval | undefined;
-  iteracaoK: IteracaoK | undefined;
+  iteracaoK: IteracaoK[];
   epsilon: number | undefined;
   loadingGeneretInterval: boolean;
   loadingEpsilon: boolean;
@@ -65,7 +67,7 @@ function App() {
     xValueInitial: 1000,
     dataSource: [],
     intervals: [],
-    iteracaoK: undefined,
+    iteracaoK: [],
     selectedInterval: undefined,
     epsilon: undefined,
     loadingGeneretInterval: false,
@@ -76,23 +78,38 @@ function App() {
   const intervalsAux: Interval[] = [];
   const kAux: IteracaoK[] = [];
 
+  function evaluatePolynomial(polynomial: string, x: number): number {
+    polynomial = polynomial.replaceAll("x", "(x)");
+    polynomial = polynomial.replaceAll("^", "**");
+    const fn = eval(`(x) => ${polynomial}`);
+    const result = fn(x);
+    return result;
+  }
+
   const handleClickGerarIntervalos = () => {
     let value = form.getFieldValue("funcpolinomial");
     value = value.replaceAll(" ", "");
+    value = value.replaceAll("X", "x");
     setState((prev) => ({
       ...prev,
       funcpolinomial: value,
       loadingGeneretInterval: true,
     }));
-    value = value.replaceAll("x", "(x)");
 
     for (
       let index = state.xValueInitial * -1;
       index <= state.xValueInitial;
       index++
     ) {
-      const func = value.replaceAll("x", `${index}`);
-      const fx = Algebrite.run(func);
+      let func = value.replaceAll("x", "(x)");
+      func = func.replaceAll("x", `${index}`);
+      let fx: any = 0;
+      try {
+        fx = evaluatePolynomial(value, index);
+      } catch (error: any) {
+        console.log(error.message);
+        fx = error.message;
+      }
 
       if (isNaN(fx)) {
         messageApi.open({
@@ -107,6 +124,7 @@ function App() {
       }
 
       const data: DataSourceType = {
+        key: index,
         func,
         xValue: index,
         fxValue: fx,
@@ -122,6 +140,7 @@ function App() {
           const a = dataSourceAux[dataSourceAux.length - 2];
           const b = dataSourceAux[dataSourceAux.length - 1];
           intervalsAux.push({
+            key: index,
             a,
             b,
             label: `[${a.xValue}, ${b.xValue}]`,
@@ -148,7 +167,7 @@ function App() {
       xValueInitial: 1000,
       dataSource: [],
       intervals: [],
-      iteracaoK: undefined,
+      iteracaoK: [],
       selectedInterval: undefined,
       epsilon: undefined,
       loadingGeneretInterval: false,
@@ -172,8 +191,9 @@ function App() {
           marginTop: "5vh",
         },
       });
+      return;
     }
-    if (value == 0) {
+    if (Number(value) === 0) {
       messageApi.open({
         type: "error",
         content:
@@ -183,6 +203,7 @@ function App() {
           marginTop: "5vh",
         },
       });
+      return;
     }
     setState((prev) => ({
       ...prev,
@@ -202,15 +223,13 @@ function App() {
     let aFunc = a.func;
     let bFunc = b.func;
 
-    while (Math.abs(fxAux) >= value) {
-      const kValue = Number(((aValue + bValue) / 2).toFixed(value.length));
+    while (Math.abs(fxAux) >= Number(value)) {
+      const kValue = (aValue + bValue) / 2;
+
+      fxAux = evaluatePolynomial(funcpolinomial, kValue);
 
       let func = funcpolinomial.replaceAll("x", "(x)");
       func = func.replaceAll("x", `${kValue}`);
-      fxAux = Number(
-        Number(Algebrite.run(func).replace("...", "")).toFixed(value.length)
-      );
-      console.log(fxAux);
 
       const replaceA = fxAux > 0 === aFxValue > 0;
       if (replaceA) {
@@ -224,16 +243,20 @@ function App() {
       }
 
       kAux.push({
+        key: kValue,
         label: `k${count}`,
         k: replaceA
           ? {
+              key: kValue,
               a: {
+                key: kValue,
                 func,
                 fxValue: fxAux,
                 xValue: kValue,
                 sinal: fxAux >= 0 ? "+" : "-",
               },
               b: {
+                key: kValue,
                 func: bFunc,
                 fxValue: bFxValue,
                 xValue: bValue,
@@ -242,13 +265,16 @@ function App() {
               label: "",
             }
           : {
+              key: kValue,
               a: {
+                key: kValue,
                 func: aFunc,
                 fxValue: aFxValue,
                 xValue: aValue,
                 sinal: aFxValue >= 0 ? "+" : "-",
               },
               b: {
+                key: kValue,
                 func,
                 fxValue: fxAux,
                 xValue: kValue,
@@ -259,12 +285,40 @@ function App() {
       });
       count++;
     }
-    console.log(kAux);
+    kAux.unshift({
+      key: 0,
+      label: "k0",
+      k: {
+        key: 0,
+        a: selectedInterval?.a as DataSourceType,
+        b: selectedInterval?.b as DataSourceType,
+        label: "",
+      },
+    });
+
+    setTimeout(() => {
+      setState((prev) => ({
+        ...prev,
+        iteracaoK: kAux,
+        epsilon: value,
+        loadingEpsilon: false,
+      }));
+    }, 3000);
   };
 
+  const findFx = (value: number): number => {
+    return (
+      state.iteracaoK.find((x) => x.k.a.xValue === value)?.k.a.fxValue ??
+      (state.iteracaoK.find((x) => x.k.b.xValue === value)?.k.b
+        .fxValue as number)
+    );
+  };
   return (
-    <Card style={{ width: "800px", height: "100%" }}>
-      <h2>{"Teorema de Bolzano"}</h2>
+    <Card
+      size="small"
+      title={<h2>{"Determinação de raízes de funções"}</h2>}
+      style={{ width: "800px", height: "100%" }}
+    >
       {contextHolder}
       <Form
         {...layout}
@@ -282,7 +336,7 @@ function App() {
             },
           ]}
         >
-          <Input placeholder="x^3 - 9*x + 3" />
+          <Input type="text" placeholder="x^3 - 9*x + 3" />
         </Form.Item>
         <Form.Item {...tailLayout}>
           <Space wrap>
@@ -365,15 +419,29 @@ function App() {
           </Button>
         </Form.Item>
       </Form>
-      <Card>
-        {state.funcpolinomial.length > 0 && (
-          <h3>{`f(x) = ${state.funcpolinomial}`}</h3>
-        )}
+
+      <Card
+        size="small"
+        title={
+          state.iteracaoK.length > 0 ? (
+            <span>{`f(x) = ${state.funcpolinomial} |  f(p) ≈ 0: ${findFx(
+              state.iteracaoK[state.iteracaoK.length - 1].key
+            )}`}</span>
+          ) : state.funcpolinomial.length > 0 ? (
+            <span>{`f(x) = ${state.funcpolinomial}`}</span>
+          ) : (
+            ""
+          )
+        }
+      >
         <Tabs
+          defaultActiveKey={"1"}
+          type="card"
+          size="small"
           items={[
             {
-              key: "fase0",
-              label: "Fase 0",
+              key: "1",
+              label: "Teorema de Bolzano",
               children: (
                 <Table
                   size="small"
@@ -395,15 +463,17 @@ function App() {
                       key: "fxValue",
                     },
                     {
-                      title: "Sinal",
+                      title: "+/-",
                       dataIndex: "sinal",
                       key: "sinal",
                     },
                   ]}
                   dataSource={state.dataSource}
-                  rowKey={(record) => record.xValue}
+                  rowKey={(record) => record.key}
                   pagination={{
                     size: "small",
+                    showSizeChanger: false,
+                    showQuickJumper: false,
                     position: ["bottomCenter"],
                   }}
                   style={{
@@ -413,23 +483,74 @@ function App() {
               ),
             },
             {
-              key: "fase1",
-              label: "Fase 1",
+              key: "2",
+              label: "Método da Bissecção",
+              disabled: !(state.iteracaoK.length > 0),
               children: (
-                <>
-                  {state.intervals && (
-                    <>
-                      {state.intervals.map((x) => {
-                        return (
-                          <>
-                            {`Intervalo [${x.a.xValue}, ${x.b.xValue}] `}{" "}
-                            <br></br>
-                          </>
+                <Table
+                  size="small"
+                  loading={state.loadingEpsilon}
+                  columns={[
+                    {
+                      title: "k'",
+                      dataIndex: "label",
+                      key: "label",
+                    },
+                    {
+                      title: "[a; b]",
+                      dataIndex: "k",
+                      key: "ab",
+                      render: (record) => (
+                        <span>{`[${record.a.xValue ?? ""}; ${
+                          record.b.xValue ?? ""
+                        }]`}</span>
+                      ),
+                    },
+                    {
+                      title: "(a + b)/2",
+                      dataIndex: "k",
+                      key: "mid",
+                      render: (record) => (
+                        <span>
+                          {(record.a.xValue + record.b.xValue) / 2 ?? ""}
+                        </span>
+                      ),
+                    },
+                    {
+                      title: "fx((a + b)/2)",
+                      dataIndex: "k",
+                      key: "b",
+                      render: (record) => {
+                        const value = (record.a.xValue + record.b.xValue) / 2;
+                        const fx = findFx(value);
+                        return <span>{fx}</span>;
+                      },
+                    },
+                    {
+                      title: "+/-",
+                      dataIndex: "k",
+                      key: "sinal",
+                      render: (record) => {
+                        const fx = findFx(
+                          (record.a.xValue + record.b.xValue) / 2
                         );
-                      })}
-                    </>
-                  )}
-                </>
+                        const retorno = fx >= 0 ? "+" : "-";
+                        return <span>{retorno}</span>;
+                      },
+                    },
+                  ]}
+                  dataSource={state.iteracaoK}
+                  rowKey={(record) => record.key}
+                  pagination={{
+                    size: "small",
+                    showSizeChanger: false,
+                    showQuickJumper: false,
+                    position: ["bottomCenter"],
+                  }}
+                  style={{
+                    height: "450px",
+                  }}
+                />
               ),
             },
           ]}
