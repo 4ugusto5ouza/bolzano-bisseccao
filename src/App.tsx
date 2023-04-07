@@ -180,8 +180,10 @@ function App() {
   };
 
   const handleClickCalcularEpsilon = () => {
+    debugger;
     let value = formInterval.getFieldValue("epsilon");
-
+    value = value.replace(",", ".");
+    
     if (isNaN(value)) {
       messageApi.open({
         type: "error",
@@ -424,9 +426,9 @@ function App() {
         size="small"
         title={
           state.iteracaoK.length > 0 ? (
-            <span>{`f(x) = ${state.funcpolinomial} |  f(p) ≈ 0: ${findFx(
+            <span>{`f(x) = ${state.funcpolinomial} |  f(p) ≈ 0 = ${
               state.iteracaoK[state.iteracaoK.length - 1].key
-            )}`}</span>
+            }`}</span>
           ) : state.funcpolinomial.length > 0 ? (
             <span>{`f(x) = ${state.funcpolinomial}`}</span>
           ) : (
@@ -446,6 +448,8 @@ function App() {
                 <Table
                   size="small"
                   loading={state.loadingGeneretInterval}
+                  dataSource={state.dataSource}
+                  rowKey={(record) => record.key}
                   columns={[
                     {
                       title: "x",
@@ -468,8 +472,6 @@ function App() {
                       key: "sinal",
                     },
                   ]}
-                  dataSource={state.dataSource}
-                  rowKey={(record) => record.key}
                   pagination={{
                     size: "small",
                     showSizeChanger: false,
@@ -490,31 +492,58 @@ function App() {
                 <Table
                   size="small"
                   loading={state.loadingEpsilon}
+                  dataSource={state.iteracaoK}
+                  rowKey={(record) => record.key}
                   columns={[
                     {
                       title: "k'",
                       dataIndex: "label",
                       key: "label",
+                      render: (label) => {
+                        if (
+                          state.iteracaoK[state.iteracaoK.length - 1].label ===
+                          label
+                        ) {
+                          return <span>{""}</span>;
+                        }
+                        return <span>{label}</span>;
+                      },
                     },
                     {
                       title: "[a; b]",
                       dataIndex: "k",
                       key: "ab",
-                      render: (record) => (
-                        <span>{`[${record.a.xValue ?? ""}; ${
-                          record.b.xValue ?? ""
-                        }]`}</span>
-                      ),
+                      render: (record) => {
+                        if (
+                          state.iteracaoK[state.iteracaoK.length - 1].key ===
+                          record.key
+                        ) {
+                          return <span>{""}</span>;
+                        }
+                        return (
+                          <span>{`[${record.a.xValue ?? ""}; ${
+                            record.b.xValue ?? ""
+                          }]`}</span>
+                        );
+                      },
                     },
                     {
                       title: "(a + b)/2",
                       dataIndex: "k",
                       key: "mid",
-                      render: (record) => (
-                        <span>
-                          {(record.a.xValue + record.b.xValue) / 2 ?? ""}
-                        </span>
-                      ),
+                      render: (record) => {
+                        if (
+                          state.iteracaoK[state.iteracaoK.length - 1].key ===
+                          record.key
+                        ) {
+                          return <span>{""}</span>;
+                        }
+                        return (
+                          <span>
+                            {(record.a.xValue + record.b.xValue) / 2 ?? ""}
+                          </span>
+                        );
+                      },
                     },
                     {
                       title: "fx((a + b)/2)",
@@ -531,6 +560,12 @@ function App() {
                       dataIndex: "k",
                       key: "sinal",
                       render: (record) => {
+                        if (
+                          state.iteracaoK[state.iteracaoK.length - 1].key ===
+                          record.key
+                        ) {
+                          return <span>{""}</span>;
+                        }
                         const fx = findFx(
                           (record.a.xValue + record.b.xValue) / 2
                         );
@@ -539,8 +574,6 @@ function App() {
                       },
                     },
                   ]}
-                  dataSource={state.iteracaoK}
-                  rowKey={(record) => record.key}
                   pagination={{
                     size: "small",
                     showSizeChanger: false,
