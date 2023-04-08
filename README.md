@@ -1,3 +1,4 @@
+[![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-blue.svg)](license)
 # Sistema para Geração de Intervalos de Raízes e Aproximação de Raízes de Funções Polinomiais
 
 Este projeto tem como objetivo criar um sistema em ReactJS com TypeScript capaz de gerar intervalos de raízes e aproximar as raízes de funções polinomiais. O sistema utiliza a teoria de Bolzano para gerar os intervalos de raízes e o método da bissecção para aproximar as raízes.
@@ -22,5 +23,5 @@ Siga as instruções na tela para inserir a função polinomial e o valor de eps
 O sistema irá gerar os intervalos de raízes de acordo com a teoria de Bolzano e, em seguida, utilizará o método da bissecção para aproximar as raízes com o valor de epsilon desejado.
 ## Licença
 
-Este projeto é licenciado sob a Licença MIT - consulte o arquivo [LICENSE](license) para obter mais detalhes.
-[![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-blue.svg)](license)
+Este projeto é licenciado sob a Licença MIT - consulte o arquivo [![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-blue.svg)](license) para obter mais detalhes.
+
