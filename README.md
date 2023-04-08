@@ -13,10 +13,10 @@ npm install
 ## Utilização
 
 Para iniciar a aplicação, execute o seguinte comando no terminal:
-npm start
+npm run dev
 
 
-Abra [http://localhost:3000](http://localhost:3000) para visualizar a aplicação no navegador.
+Abra [http://localhost:5173](http://localhost:5173) para visualizar a aplicação no navegador.
 
 Siga as instruções na tela para inserir a função polinomial e o valor de epsilon desejado para a aproximação.
 
