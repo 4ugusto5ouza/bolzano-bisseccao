@@ -8,13 +8,18 @@ Este projeto tem como objetivo criar um sistema em ReactJS com TypeScript capaz 
 Antes de começar, certifique-se de ter o Node.js instalado em sua máquina. Você pode baixá-lo a partir do site oficial [https://nodejs.org](https://nodejs.org/).
 
 Para instalar as dependências, navegue até o diretório do projeto e execute o seguinte comando no terminal:
+
+~~~bash
 npm install
+~~~
 
 ## Utilização
 
 Para iniciar a aplicação, execute o seguinte comando no terminal:
-npm run dev
 
+~~~bash
+npm run dev
+~~~
 
 Abra [http://localhost:5173](http://localhost:5173) para visualizar a aplicação no navegador.
 
