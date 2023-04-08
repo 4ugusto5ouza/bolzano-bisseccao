@@ -26,6 +26,10 @@ Abra [http://localhost:5173](http://localhost:5173) para visualizar a aplicaçã
 Siga as instruções na tela para inserir a função polinomial e o valor de epsilon desejado para a aproximação.
 
 O sistema irá gerar os intervalos de raízes de acordo com a teoria de Bolzano e, em seguida, utilizará o método da bissecção para aproximar as raízes com o valor de epsilon desejado.
+
+## Publicação
+O projeto está publicado em [https://bolzano-bisseccao.netlify.app/](https://bolzano-bisseccao.netlify.app/).
+
 ## Licença
 
 Este projeto é licenciado sob a Licença MIT - consulte o arquivo [![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-blue.svg)](license) para obter mais detalhes.
