@@ -23,3 +23,4 @@ O sistema irá gerar os intervalos de raízes de acordo com a teoria de Bolzano 
 ## Licença
 
 Este projeto é licenciado sob a Licença MIT - consulte o arquivo [LICENSE](license) para obter mais detalhes.
+[![Licença MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-blue.svg)](license)
