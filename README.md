@@ -22,4 +22,4 @@ Siga as instruções na tela para inserir a função polinomial e o valor de eps
 O sistema irá gerar os intervalos de raízes de acordo com a teoria de Bolzano e, em seguida, utilizará o método da bissecção para aproximar as raízes com o valor de epsilon desejado.
 ## Licença
 
-Este projeto é licenciado sob a Licença MIT - consulte o arquivo [LICENSE](LICENSE) para obter mais detalhes.
+Este projeto é licenciado sob a Licença MIT - consulte o arquivo [LICENSE](license) para obter mais detalhes.
