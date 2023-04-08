@@ -19,7 +19,7 @@ Abra [http://localhost:3000](http://localhost:3000) para visualizar a aplicaçã
 
 Siga as instruções na tela para inserir a função polinomial e o valor de epsilon desejado para a aproximação.
 
-O sistema irá gerar os intervalos de raízes de acordo com a teoria de Bolzano e, em seguida, utilizará o método da bisseccao para aproximar as raízes com o valor de epsilon desejado.
+O sistema irá gerar os intervalos de raízes de acordo com a teoria de Bolzano e, em seguida, utilizará o método da bissecção para aproximar as raízes com o valor de epsilon desejado.
 ## Licença
 
 Este projeto é licenciado sob a Licença MIT - consulte o arquivo [LICENSE](LICENSE) para obter mais detalhes.
